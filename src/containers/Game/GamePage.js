@@ -17,6 +17,7 @@ const GamePage = ({
         <Card
           key={card.key}
           name={card.name}
+          color={card.color}
           isActive={card.isActive}
           onClick={() => {
             onCardClick(card.key);
