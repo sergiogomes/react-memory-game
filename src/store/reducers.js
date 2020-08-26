@@ -1,25 +1,41 @@
-import { LOCK, OPEN_CARD, SET_MATCH, CLOSE_CARDS } from "./actions";
+import {
+  LOCK,
+  OPEN_CARD,
+  SET_MATCH,
+  CLOSE_CARDS,
+  CLOSE_VICTORY_DIALOG,
+  START_GAME,
+} from "./actions";
+import ListBuilder from "../builders/ListBuilder";
 
 const initialState = {
   isLocked: false,
-  cards: [
-    { id: 1, key: 1, name: "Card One", isActive: false, hasMatch: false },
-    { id: 1, key: 2, name: "Card One", isActive: false, hasMatch: false },
-    { id: 2, key: 3, name: "Card Two", isActive: false, hasMatch: false },
-    { id: 2, key: 4, name: "Card Two", isActive: false, hasMatch: false },
-    { id: 3, key: 5, name: "Card Three", isActive: false, hasMatch: false },
-    { id: 3, key: 6, name: "Card Three", isActive: false, hasMatch: false },
-  ],
+  isVictoryDialogOpen: false,
+  cards: new ListBuilder().createList(3).shuffle().build(),
 };
 
 const gameReducer = (state = initialState, action) => {
   switch (action.type) {
+    case START_GAME:
+      return {
+        ...state,
+        isVictoryDialogOpen: false,
+        cards: new ListBuilder().createList(3).shuffle().build(),
+      };
+
+    case CLOSE_VICTORY_DIALOG:
+      return {
+        ...state,
+        isVictoryDialogOpen: false,
+      };
+
     case LOCK: {
       return {
         ...state,
         isLocked: true,
       };
     }
+
     case OPEN_CARD: {
       const cards = state.cards.slice();
       cards[action.index].isActive = true;
@@ -29,16 +45,25 @@ const gameReducer = (state = initialState, action) => {
         cards,
       };
     }
+
     case SET_MATCH: {
       const cards = state.cards.slice();
+      let isVictoryDialogOpen = false;
+
       cards[action.index1].hasMatch = true;
       cards[action.index2].hasMatch = true;
 
+      if (cards.every((c) => c.hasMatch)) {
+        isVictoryDialogOpen = true;
+      }
+
       return {
         ...state,
+        isVictoryDialogOpen,
         cards,
       };
     }
+
     case CLOSE_CARDS: {
       const cards = state.cards.slice();
       cards[action.index1].isActive = false;
