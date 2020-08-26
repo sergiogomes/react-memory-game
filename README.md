@@ -9,6 +9,7 @@ npm install @material-ui/core
 npm install react-router-dom classnames prettier
 npm install redux react-redux
 npm install redux-devtools-extension
+npm install redux-saga
 ```
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

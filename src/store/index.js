@@ -1,7 +1,10 @@
-import { createStore } from "redux";
+import { createStore, applyMiddleware } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
+import createSagaMiddleware from "redux-saga";
+import { select, put, takeEvery, delay } from "redux-saga/effects";
 
 const initialState = {
+  isLocked: false,
   cards: [
     { id: 1, key: 1, name: "Card One", isActive: false, hasMatch: false },
     { id: 1, key: 2, name: "Card One", isActive: false, hasMatch: false },
@@ -12,38 +15,87 @@ const initialState = {
   ],
 };
 
+function* selectCard(action) {
+  const { key } = action;
+  const cards = yield select((state) => state.cards);
+  const isLocked = yield select((state) => state.isLocked);
+  const index = cards.findIndex((c) => c.key === key);
+  const otherCardIndex = cards.findIndex((c) => c.isActive && !c.hasMatch);
+
+  if (!isLocked && index > -1 && !cards[index].isActive) {
+    yield put({ type: "OPEN_CARD", index });
+
+    if (otherCardIndex > -1) {
+      if (cards[index].id === cards[otherCardIndex].id) {
+        yield put({ type: "SET_MATCH", index1: index, index2: otherCardIndex });
+      } else {
+        yield put({ type: "LOCK" });
+        yield delay(1500);
+        yield put({
+          type: "CLOSE_CARDS",
+          index1: index,
+          index2: otherCardIndex,
+        });
+      }
+    }
+  }
+}
+
+function* gameSaga() {
+  yield takeEvery("SELECT_CARD", selectCard);
+}
+
 const gameReducer = (state = initialState, action) => {
   switch (action.type) {
-    case "SELECT_CARD":
+    case "LOCK": {
+      return {
+        ...state,
+        isLocked: true,
+      };
+    }
+    case "OPEN_CARD": {
       const cards = state.cards.slice();
-      const index = cards.findIndex((c) => c.key === action.key);
-      const otherCardIndex = cards.findIndex((c) => c.isActive && !c.hasMatch);
-
-      if (index > -1) {
-        if (cards[index].isActive) return state;
-
-        if (otherCardIndex > -1) {
-          if (cards[index].id === cards[otherCardIndex].id) {
-            cards[index].isActive = true;
-            cards[index].hasMatch = true;
-            cards[otherCardIndex].hasMatch = true;
-          } else {
-            cards[otherCardIndex].isActive = false;
-          }
-        } else {
-          cards[index].isActive = true;
-        }
-      }
+      cards[action.index].isActive = true;
 
       return {
         ...state,
         cards,
       };
+    }
+    case "SET_MATCH": {
+      const cards = state.cards.slice();
+      cards[action.index1].hasMatch = true;
+      cards[action.index2].hasMatch = true;
+
+      return {
+        ...state,
+        cards,
+      };
+    }
+    case "CLOSE_CARDS": {
+      const cards = state.cards.slice();
+      cards[action.index1].isActive = false;
+      cards[action.index2].isActive = false;
+
+      return {
+        ...state,
+        isLocked: false,
+        cards,
+      };
+    }
+
     default:
       return state;
   }
 };
 
-const store = createStore(gameReducer, composeWithDevTools());
+const sagaMiddleware = createSagaMiddleware();
+
+const store = createStore(
+  gameReducer,
+  composeWithDevTools(applyMiddleware(sagaMiddleware))
+);
+
+sagaMiddleware.run(gameSaga);
 
 export default store;
