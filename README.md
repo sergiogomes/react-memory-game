@@ -4,6 +4,7 @@ React Redux Material UI Webpack
 
 [![time tracker](https://wakatime.com/badge/github/sergiogomes/react-memory-game.svg)](https://wakatime.com/badge/github/sergiogomes/react-memory-game)
 
+![All Cards](https://raw.githubusercontent.com/sergiogomes/react-memory-game/master/public/allCards.png)
 ```sh
 npm install @material-ui/core
 npm install react-router-dom classnames prettier
