@@ -5,10 +5,10 @@ import Typography from "@material-ui/core/Typography";
 
 const styles = (theme) => ({
   root: {
-    padding: theme.spacing.unit * 6,
+    padding: theme.spacing(6),
   },
   title: {
-    paddingBottom: theme.spacing.unit * 6,
+    paddingBottom: theme.spacing(6),
   },
 });
 
